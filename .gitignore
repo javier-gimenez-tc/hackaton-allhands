@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+*.local
+
+# Python
+.venv
+__pycache__/
+*.py[cod]
+uv.lock
+
+# Secretos
+.env
