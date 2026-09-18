@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mercadona-green: #22864d;
+  --mercadona-green-dark: #1b6b3e;
+  --brand-yellow: #f7c600;
+  --bg: #ffffff;
+  --surface: #f5f5f5;
+  --text: #333333;
+  --text-muted: #767676;
+  --error: #e5322d;
+  --success: #22864d;
+  --warning: #f7a600;
+}
+
+body {
+  @apply bg-white text-mtext;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 16px;
+}
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 15px;
+  }
+}
+
+input[type="range"] {
+  accent-color: var(--mercadona-green);
+}
+
+.skeleton {
+  @apply animate-pulse rounded bg-msurface2;
+}

@@ -1,0 +1,25 @@
+{
+  "name": "mercaplan",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "api": "uv run uvicorn api.main:app --reload --port 8000",
+    "start": "concurrently -n api,web -c green,cyan \"yarn api\" \"yarn dev\"",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.1.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.0"
+  }
+}
