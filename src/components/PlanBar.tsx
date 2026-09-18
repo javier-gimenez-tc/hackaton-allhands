@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { formatDate } from '../state/store'
 import type { DietTag, MealSlot, PlanSpec } from '../types'
 
 const DIETS: Array<[DietTag, string]> = [
@@ -17,6 +19,9 @@ interface Props {
 }
 
 export function PlanBar({ spec, busy, onChange, onRegenerate }: Props) {
+  // En móvil los ajustes ocupan media pantalla, así que arrancan plegados.
+  const [open, setOpen] = useState(false)
+
   const setPeopleCount = (count: number) => {
     const total = Math.min(12, Math.max(1, count))
     const people = Array.from({ length: total }, (_, i) => spec.people[i] ?? {
@@ -50,8 +55,16 @@ export function PlanBar({ spec, busy, onChange, onRegenerate }: Props) {
   }
 
   return (
-    <section className="card planbar">
-      <div className="planbar-grid">
+    <section className={`card planbar${open ? ' open' : ''}`}>
+      <button className="planbar-toggle" type="button" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <span>
+          👥 {spec.people.length} · 📅 {spec.days} días desde {formatDate(spec.startDate)}
+        </span>
+        <span>{open ? '▲ Cerrar' : '▼ Ajustar'}</span>
+      </button>
+
+      <div className="planbar-body">
+        <div className="planbar-grid">
         <div className="field">
           <label htmlFor="people">Comensales</label>
           <input
@@ -130,40 +143,41 @@ export function PlanBar({ spec, busy, onChange, onRegenerate }: Props) {
             ))}
           </div>
         </div>
+        </div>
+
+        <div className="people">
+          {spec.people.map((person, index) => (
+            <div className="person" key={person.id}>
+              <input
+                type="text"
+                value={person.name}
+                aria-label={`Nombre del comensal ${index + 1}`}
+                maxLength={40}
+                onChange={(e) =>
+                  onChange({
+                    people: spec.people.map((p) =>
+                      p.id === person.id ? { ...p, name: e.target.value } : p,
+                    ),
+                  })
+                }
+              />
+              {DIETS.map(([diet, label]) => (
+                <button
+                  key={diet}
+                  type="button"
+                  className="diet-toggle"
+                  aria-pressed={person.diets.includes(diet)}
+                  onClick={() => toggleDiet(person.id, diet)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="people">
-        {spec.people.map((person, index) => (
-          <div className="person" key={person.id}>
-            <input
-              type="text"
-              value={person.name}
-              aria-label={`Nombre del comensal ${index + 1}`}
-              maxLength={40}
-              onChange={(e) =>
-                onChange({
-                  people: spec.people.map((p) =>
-                    p.id === person.id ? { ...p, name: e.target.value } : p,
-                  ),
-                })
-              }
-            />
-            {DIETS.map(([diet, label]) => (
-              <button
-                key={diet}
-                type="button"
-                className="diet-toggle"
-                aria-pressed={person.diets.includes(diet)}
-                onClick={() => toggleDiet(person.id, diet)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      <div className="row" style={{ justifyContent: 'space-between' }}>
+      <div className="row planbar-foot" style={{ justifyContent: 'space-between' }}>
         <div className="row" style={{ gap: 6 }}>
           {spec.notes.slice(0, 3).map((note) => (
             <span className="chip" key={note}>

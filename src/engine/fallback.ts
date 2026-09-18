@@ -23,6 +23,48 @@ const DIET_PATTERNS: Array<[RegExp, DietTag]> = [
   [/sin frutos secos|alergia a los frutos secos/, 'sin_frutos_secos'],
 ]
 
+const WEEKDAYS = ['domingo', 'lunes', 'martes', 'mi[ée]rcoles', 'jueves', 'viernes', 's[áa]bado']
+const MONTHS = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+]
+
+const iso = (d: Date) => d.toISOString().slice(0, 10)
+const plus = (base: Date, days: number) => new Date(base.getTime() + days * 86_400_000)
+
+/** Traduce expresiones tipo "la semana que viene" o "a partir del jueves" a una fecha ISO. */
+function parseStartDate(text: string, today = new Date()): string {
+  if (/pasado mañana/.test(text)) return iso(plus(today, 2))
+  if (/\bmañana\b/.test(text)) return iso(plus(today, 1))
+
+  const nextWeek = /(semana que viene|pr[oó]xima semana|semana pr[oó]xima)/.test(text)
+
+  const dayName = WEEKDAYS.findIndex((name) => new RegExp(`\\b${name}`).test(text))
+  if (dayName >= 0) {
+    let delta = (dayName - today.getDay() + 7) % 7
+    if (nextWeek && delta === 0) delta = 7
+    return iso(plus(today, delta))
+  }
+
+  if (nextWeek) {
+    const toMonday = ((8 - today.getDay()) % 7) || 7
+    return iso(plus(today, toMonday))
+  }
+
+  if (/fin de semana/.test(text)) return iso(plus(today, (6 - today.getDay() + 7) % 7))
+
+  const dated = text.match(/\b(\d{1,2})\s*(?:de\s+)?([a-záéíóú]+)?/)
+  const monthName = dated?.[2] ? MONTHS.findIndex((m) => m.startsWith(dated[2].slice(0, 4))) : -1
+  if (dated && monthName >= 0) {
+    const day = Number(dated[1])
+    const year = today.getFullYear() + (monthName < today.getMonth() ? 1 : 0)
+    const candidate = new Date(year, monthName, day)
+    if (!Number.isNaN(candidate.getTime())) return iso(candidate)
+  }
+
+  return iso(today)
+}
+
 export function parsePromptLocal(prompt: string): PlanSpec {
   const text = prompt.toLowerCase()
 
@@ -69,7 +111,7 @@ export function parsePromptLocal(prompt: string): PlanSpec {
   return {
     people,
     days,
-    startDate: new Date().toISOString().slice(0, 10),
+    startDate: parseStartDate(text),
     slots,
     maxMinutes: timeMatch ? Number(timeMatch[1]) : 45,
     budgetPerPersonDay: budgetMatch ? Number(budgetMatch[1].replace(',', '.')) : undefined,

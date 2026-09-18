@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from datetime import date
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -130,6 +131,7 @@ class Person(Base):
 class PlanSpec(Base):
     people: Annotated[list[Person], Field(max_length=12)] = Field(default_factory=list)
     days: Annotated[int, Field(ge=1, le=14)] = 7
+    start_date: Annotated[str | None, Field(max_length=10, alias="startDate")] = None
     slots: list[MealSlot] = Field(default_factory=lambda: ["comida", "cena"])
     max_minutes: Annotated[int, Field(ge=10, le=180), Field(alias="maxMinutes")] = 45
     budget_per_person_day: Annotated[float | None, Field(ge=0, le=100, alias="budgetPerPersonDay")] = None
@@ -150,6 +152,18 @@ class PlanSpec(Base):
         if not isinstance(v, list):
             return []
         return [str(x).strip()[:160] for x in v if str(x).strip()][:8]
+
+    @field_validator("start_date", mode="before")
+    @classmethod
+    def _clean_start_date(cls, v: object) -> str | None:
+        text = str(v or "").strip()[:10]
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+            return None
+        try:
+            date.fromisoformat(text)
+        except ValueError:
+            return None
+        return text
 
     @model_validator(mode="after")
     def _fill_defaults(self) -> PlanSpec:
@@ -175,6 +189,7 @@ class PlanSpec(Base):
         lines = [
             f"Comensales ({len(self.people)}): {people}",
             f"Días: {self.days}",
+            f"Primer día del plan: {self.start_date or 'hoy'}",
             f"Comidas a planificar: {' y '.join(self.slots)}",
             f"Tiempo máximo por receta: {self.max_minutes} minutos",
             f"Presupuesto: {budget}",

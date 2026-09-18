@@ -129,12 +129,13 @@ export function usePlanner() {
       if (health.ai) {
         try {
           const { spec } = await requestPlan(prompt, startDate)
-          return { ...spec, startDate }
+          return { ...spec, startDate: spec.startDate || startDate }
         } catch (err) {
           if (!(err instanceof ApiUnavailable)) throw err
         }
       }
-      return { ...parsePromptLocal(prompt), startDate }
+      const local = parsePromptLocal(prompt)
+      return { ...local, startDate: local.startDate || startDate }
     },
     [health.ai, state.spec.startDate],
   )
