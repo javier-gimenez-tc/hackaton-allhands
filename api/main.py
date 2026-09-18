@@ -6,6 +6,7 @@ import logging
 import os
 import time
 from collections import defaultdict
+from datetime import date
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
@@ -89,13 +90,18 @@ async def health() -> dict:
 async def create_plan(body: PlanRequest) -> dict:
     """Prompt en lenguaje natural → ficha estructurada del plan."""
     _require_ai()
+    today = date.fromisoformat(body.start_date) if body.start_date else date.today()
+    weekday = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")[today.weekday()]
     raw = await _ask(
         PLAN_SYSTEM,
-        f'Petición del usuario:\n"""{body.prompt}"""\n\nFecha de inicio: {body.start_date or "hoy"}.',
+        f'Petición del usuario:\n"""{body.prompt}"""\n\n'
+        f"Fecha de referencia (hoy): {today.isoformat()} ({weekday}).",
         temperature=0.2,
         max_tokens=1200,
     )
     spec = _parse(PlanSpec, raw, "plan")
+    if not spec.start_date or spec.start_date < today.isoformat():
+        spec.start_date = today.isoformat()
     return {"spec": spec.model_dump(by_alias=True), "source": "ai"}
 
 

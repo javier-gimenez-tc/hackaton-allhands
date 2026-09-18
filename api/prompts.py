@@ -26,6 +26,7 @@ Formato exacto:
 {{
   "people": [{{ "id": "p1", "name": "Comensal 1", "diets": ["vegano"] }}],
   "days": 7,
+  "startDate": "2026-09-21",
   "slots": ["comida", "cena"],
   "maxMinutes": 45,
   "budgetPerPersonDay": 6.5,
@@ -37,11 +38,20 @@ Detalles:
 - Crea un objeto en "people" por cada comensal mencionado; "diets" vacío = omnívoro sin restricciones.
 - Si el usuario no indica nombres, usa "Comensal 1", "Comensal 2"...
 - "days" entre 1 y 14. "una semana" = 7. "fin de semana" = 2.
+- "startDate" en formato YYYY-MM-DD, calculado SIEMPRE a partir de la fecha de referencia que se te da:
+  - sin mención temporal, usa la propia fecha de referencia;
+  - "mañana" = +1 día; "pasado mañana" = +2;
+  - "el lunes", "a partir del jueves" = el próximo día de esa semana (si hoy ya es ese día, hoy mismo);
+  - "la semana que viene" / "la próxima semana" = el lunes siguiente;
+  - "el fin de semana" = el próximo sábado;
+  - "a partir del 22" o "el 22 de octubre" = esa fecha concreta (si ya pasó, la del año o mes siguiente).
+  Nunca devuelvas una fecha anterior a la de referencia.
 - "slots": incluye "comida" y/o "cena" según lo pedido; por defecto ambos.
 - "maxMinutes": tiempo máximo de preparación por receta (por defecto 45).
 - "budgetPerPersonDay" en euros; null si no se menciona.
 - "excluded": ingredientes que el usuario rechaza explícitamente, en minúsculas y singular.
-- "notes": resumen legible de lo que has entendido, una frase por restricción."""
+- "notes": resumen legible de lo que has entendido, una frase por restricción. Si el plan no empieza en la
+  fecha de referencia, añade una nota indicando cuándo empieza."""
 
 
 MENU_SYSTEM = f"""{_SHARED_RULES}
